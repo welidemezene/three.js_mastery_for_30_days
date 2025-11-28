@@ -1,0 +1,17 @@
+{
+  "name": "threejs-mastery",
+  "type": "module",
+  "scripts": {
+    "dev-day1": "vite src/day_1/",
+    "dev-day2": "vite src/day_2/",
+    "dev-day3": "vite src/day_3/",
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
