@@ -18,7 +18,7 @@ document.body.style.margin = 0;
 document.body.appendChild(renderer.domElement);
 
 // GRID
-const gridHelper = new THREE.GridHelper(20, 20);
+const gridHelper = new THREE.GridHelper(40, 40);
 scene.add(gridHelper);
 
 // 2. OBJECTS
@@ -34,7 +34,7 @@ const enemyMesh = new THREE.Mesh(
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshBasicMaterial({ color: 0xff0000 })
 );
-enemyMesh.position.set(-5, 0, -5);
+enemyMesh.position.set(-30, 0, -20);
 scene.add(enemyMesh);
 
 // 3. STOP BUBBLE (Distance Visualization)
