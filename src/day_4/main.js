@@ -17,7 +17,7 @@ document.body.style.margin = 0;
 const controls = new OrbitControls(camera, renderer.domElement);
 
 // FIX 2: Use a working URL first to verify code logic
-const hdrUrl = 'assets/blue_photo_studio_2k.hdr';
+const hdrUrl = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/blue_photo_studio_1k.hdr';
 
 // FIX 3: Use RGBELoader
 const loader = new RGBELoader();
