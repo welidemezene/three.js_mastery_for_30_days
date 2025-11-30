@@ -5,6 +5,11 @@
     "dev-day1": "vite src/day_1/",
     "dev-day2": "vite src/day_2/",
     "dev-day3": "vite src/day_3/",
+    "dev-day4": "vite src/day_4/",
+    "dev-day5": "vite src/day_5/",
+    "dev-day6": "vite src/day_6/",
+    "dev-day7": "vite src/day_7/",
+    
     "dev": "vite",
     "build": "vite build"
   },
