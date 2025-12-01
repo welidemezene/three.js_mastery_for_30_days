@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // FIX 1: Correct Import Name
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js'; 
+import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -17,18 +17,21 @@ document.body.style.margin = 0;
 const controls = new OrbitControls(camera, renderer.domElement);
 
 // FIX 2: Use a working URL first to verify code logic
-const hdrUrl = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/blue_photo_studio_1k.hdr';
+ const hdrUrl = 'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/blue_photo_studio_1k.hdr';
 
 // FIX 3: Use RGBELoader
-const loader = new RGBELoader();
-loader.load(hdrUrl, function(texture) {
-    texture.mapping = THREE.EquirectangularReflectionMapping; 
+const loader = new HDRLoader();
+loader.load(
+  hdrUrl,  // Root-relative URL
+  (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.background = texture;
     scene.environment = texture;
-    
-    // Debug: Log to verify it loaded
-    console.log("HDR Loaded successfully");
-});
+    console.log("HDR loaded successfully");
+  },
+  undefined,
+  (err) => console.error("HDR failed to load:", err)
+);
 
 // Objects
 const geometry = new THREE.SphereGeometry(0.5, 32, 32);

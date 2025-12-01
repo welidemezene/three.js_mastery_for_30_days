@@ -1,0 +1,289 @@
+PART 1 — The Core Concepts You MUST Memorize Forever (The UV Foundations)
+
+These are the real mental models behind UVs.
+Once you understand them, everything becomes obvious:
+
+🔥 1. UVs connect 3D → 2D (The Candy Wrapper Rule)
+A 3D mesh is just points in space (vertices).
+A texture is just a 2D image.
+UVs are instructions:
+
+“This 3D point corresponds to this pixel on the 2D image.”
+
+🔥 2. The UV coordinate system is ALWAYS 0 → 1
+
+This is the single most important rule:
+
+U (horizontal): 0 = left, 1 = right
+
+V (vertical): 0 = bottom, 1 = top
+
+No matter what the image size is (1024, 2048, 4K):
+
+1.0 = 100% of the width or height.
+0.5 = middle.
+0.25 = quarter.
+
+🔥 3. Each vertex has one UV coordinate
+
+Geometry has:
+
+geometry.attributes.position  → xyz per vertex
+geometry.attributes.uv        → uv per vertex
+
+
+If a face looks stretched:
+
+UV positions are wrong
+
+The 4 vertices do NOT map correctly to the image
+
+🔥 4. UV Errors ALWAYS produce 3 problems:
+
+1️⃣ Stretching
+2️⃣ Squishing
+3️⃣ Flipped / rotated looking texture
+
+Understanding the UV grid lets you instantly see the error.
+
+🔥 5. Texture operations (offset / repeat / rotation) work in UV space
+
+These DO NOT move the object.
+They only change how the wrapper slides on the chocolate.
+
+offset → move texture
+
+repeat → scale / tile
+
+rotation → rotate around texture center
+
+🔥 6. Wrap Modes (VERY IMPORTANT)
+Default:
+ClampToEdgeWrapping  (stretches the last pixel)
+
+To scroll or tile:
+RepeatWrapping
+
+
+Remember:
+
+90% of texture animation fails because the student forgets → wrapS + wrapT
+This is a KEYWORD to memorize.
+
+🔥 7. Debugging Textures (Professional Method)
+
+Use the UV grid to check:
+
+Are lines straight?
+
+Are squares perfect squares?
+
+Are numbers readable?
+
+If not → UVs are broken.
+
+⭐ Summary of "Core Concepts to Never Forget"
+
+(Memorize this list)
+
+UV = coordinates on image
+
+UV range = always 0–1
+
+Every vertex has a UV
+
+Incorrect UV → stretched texture
+
+Texture offset requires RepeatWrapping
+
+repeat < 1 zooms IN
+
+repeat > 1 tiles OUT
+
+offset moves UV window
+
+center must be set before rotation
+
+✅ PART 2 — Understanding the Day 5 Code (Line by Line Like a Master)
+
+Now let’s explain your code clearly.
+
+2.1 The Texture
+const uvTexture = textureLoader.load('https://threejs.org/examples/textures/uv_grid_opengl.jpg');
+
+
+We use this because:
+
+It is perfect for testing UV mapping.
+
+You'll immediately see distortions.
+
+Local files cause beginners problems (paths, CORS).
+
+2.2 Expert Filters
+uvTexture.minFilter = THREE.NearestFilter;
+uvTexture.magFilter = THREE.NearestFilter;
+
+
+These prevent the texture from getting blurry.
+Useful when debugging UV lines.
+
+2.3 Mapping the Texture
+const material = new THREE.MeshBasicMaterial({ 
+    map: uvTexture
+});
+
+
+MeshBasicMaterial = no shadows, no light → perfect for studying UVs.
+
+2.4 Animating the Texture (THE MAGIC)
+A. Slide the texture
+
+Move the wrapper → chocolate stays still
+
+uvTexture.offset.x = time * 0.1;
+
+
+Used for:
+
+water
+
+conveyor belts
+
+moving holograms
+
+B. Repeat (Zoom in or Tile)
+uvTexture.repeat.set(2, 2);   // tile 2x2
+uvTexture.wrapS = THREE.RepeatWrapping;
+uvTexture.wrapT = THREE.RepeatWrapping;
+
+
+Memorize this:
+
+repeat < 1 = zoom in
+repeat > 1 = tile more
+
+C. Rotate around center
+uvTexture.center.set(0.5, 0.5);
+uvTexture.rotation = Math.sin(time) * 0.5;
+
+
+Rule:
+
+You MUST set center BEFORE rotation.
+
+✅ PART 3 — The Challenge (Zoom on the Center)
+
+You want to show only the middle 50% of the image.
+
+Step 1 — Zoom in (repeat = 0.5)
+uvTexture.repeat.set(0.5, 0.5);
+
+Step 2 — Move UV window to center
+
+To center:
+Offset = (1 − repeat) / 2
+Offset = (1 − 0.5) / 2 = 0.25
+
+uvTexture.offset.set(0.25, 0.25);
+
+Step 3 — Set wrap modes (mandatory)
+uvTexture.wrapS = THREE.RepeatWrapping;
+uvTexture.wrapT = THREE.RepeatWrapping;
+
+⭐ FINAL ANSWER: Your Working "Zoom In" Code
+
+Add this inside animate() before render:
+
+// Zoom into center of the texture
+uvTexture.wrapS = THREE.RepeatWrapping;
+uvTexture.wrapT = THREE.RepeatWrapping;
+
+uvTexture.repeat.set(0.5, 0.5);      // Zoom in (show 50% of image)
+uvTexture.offset.set(0.25, 0.25);    // Move to the center
+
+
+This is EXACTLY the correct formula.
+This is how you zoom-in on any part of any texture.
+
+✅ PART 4 — Expert Level: Editing Raw UV Data
+
+This is the part beginners skip — but it is CRITICAL for real 3D work.
+
+const uvAttribute = geometry.attributes.uv;
+uvAttribute.setXY(0, 0.5, 0.5);
+uvAttribute.needsUpdate = true;
+
+
+This demonstrates:
+
+You can manually change UVs
+
+UVs are just numbers in an array
+
+Changing one UV moves the texture mapping on that vertex
+
+This skill is exactly what you need for:
+
+Fixing UVs on your golf ball
+
+Writing custom unwrapping tools
+
+Aligning logos on spheres
+
+Procedural texture placement
+
+⭐ FINAL SUMMARY (What You Must Know After Day 5)
+Core Concepts
+
+UVs connect 3D → texture
+
+UVs are always 0–1
+
+Each vertex has a UV pair
+
+Wrong UV = stretching
+
+Debug UV Grid is essential
+
+Keywords to Never Forget
+
+repeat
+
+offset
+
+rotation
+
+wrapS / wrapT
+
+RepeatWrapping
+
+center
+
+uvAttribute
+
+Skills You Gained
+
+✔ How to load textures correctly
+✔ How to debug UVs
+✔ How to slide/zoom/tile textures
+✔ How to manipulate UV window (offset + repeat)
+✔ How to manually edit UV attribute values
+
+
+
+PART 4 — How to Detect Stretched or Bad UVs
+
+The best method:
+
+➤ Apply a UV Test Grid in Three.js
+
+Use this texture:
+
+https://threejs.org/examples/textures/uv_grid_opengl.jpg
+
+
+Then:
+
+child.material.map = texture;
+child.material.needsUpdate = true;
