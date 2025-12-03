@@ -1,0 +1,51 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+canvas {
+    display: block;
+}
+
+kbd {
+    background: #333;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+}
+
+/* Custom GUI Styling */
+.lil-gui {
+    --background-color: rgba(20, 20, 30, 0.95);
+    --text-color: #e0e0e0;
+    --title-background-color: #2a2a3a;
+    --title-text-color: #4fc3f7;
+    --widget-color: #3a3a4a;
+    --hover-color: #4a4a5a;
+    --focus-color: #5c6bc0;
+}
+
+.lil-gui .title {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.lil-gui .controller button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-weight: 500;
+}
+
+.lil-gui .controller button:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}

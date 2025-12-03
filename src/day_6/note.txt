@@ -1,0 +1,294 @@
+🎯 RAYCASTER — The Full Conceptual Breakdown
+
+Raycasting is one of the most important concepts in 3D programming.
+It allows you to:
+
+detect which object the mouse is pointing at
+
+detect clicks
+
+read UVs
+
+create interactions (hover, select, drag, etc)
+
+build games, editors, painting tools, and UI systems
+
+Let’s go line by line in the section you asked about.
+
+🧩 PART 3 — RAYCASTER SETUP
+const raycaster = new THREE.Raycaster();
+
+✔ What it does
+
+Creates a raygun object.
+
+A Raycaster shoots an invisible laser ray from:
+
+the camera →
+
+through the mouse position on the screen →
+
+into 3D space →
+
+and tells you which objects it hits.
+
+✔ Why it matters
+
+This is the foundation of:
+
+picking objects
+
+hover effects
+
+click detection
+
+selecting 3D models
+
+3D drawing/painting
+
+physics interactions
+
+const mouse = new THREE.Vector2();
+
+✔ What it does
+
+Stores the mouse position in normalized device coordinates (NDC):
+
+X is from -1 to +1
+
+Y is from -1 to +1
+
+You need NDC because WebGL works in NDC space.
+
+✔ Why it matters
+
+Raycasting only understands normalized coordinates, not pixels.
+
+let currentlyHovered = null;
+
+✔ What it does
+
+Tracks which object is currently under the mouse.
+
+✔ Why it matters
+
+Without this:
+
+hover colors would flicker
+
+you’d reset colors every frame
+
+performance would be bad
+
+This variable creates a state machine:
+
+hover enter
+
+hover exit
+
+hover stay
+
+🧩 PART 4 — MOUSE MOVE
+window.addEventListener('mousemove', (event) => {
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+});
+
+✔ Line-by-line explanation
+1️⃣ Get mouse pixel location
+
+event.clientX = where mouse is in pixels (0 → width)
+event.clientY = where mouse is in pixels (0 → height)
+
+2️⃣ Convert pixels to NDC
+(event.clientX / window.innerWidth) → 0 to 1
+* 2 - 1 → -1 to +1
+
+3️⃣ Invert Y
+
+WebGL’s Y axis is opposite of browser Y, so:
+
+-(event.clientY / window.innerHeight) * 2 + 1
+
+✔ Why this matters
+
+You cannot raycast with pixel coordinates.
+You must convert them.
+
+🧩 PART 5 — CLICK EVENT
+raycaster.setFromCamera(mouse, camera);
+
+✔ What it does
+
+This is the moment the ray is created.
+
+Takes the camera
+
+Takes the mouse (in NDC)
+
+Computes a 3D direction vector
+
+Creates a ray in space
+
+This ray is now ready to hit objects.
+
+const intersects = raycaster.intersectObjects(objectsToTest);
+
+✔ What it does
+
+Shoots the ray into the 3D world and checks collisions.
+
+✔ Returns
+
+An array of intersections sorted from nearest → farthest.
+
+Example structure of intersects[0]:
+
+{
+  object: Mesh,
+  distance: 2.4,
+  point: Vector3,
+  face: Face3,
+  uv: Vector2,
+}
+
+✔ Why this matters
+
+This gives you the exact part of the mesh you hit:
+
+exact 3D point
+
+exact UV coordinate
+
+exact mesh
+
+exact triangle
+
+const hit = intersects[0];
+
+✔ What it does
+
+Takes the closest object the ray hit.
+
+🎯 Logging useful info
+console.log("Object:", hit.object.name);
+console.log("3D Position:", hit.point);
+console.log("UV Coordinates:", hit.uv);
+
+Meaning:
+
+hit.object → which cube was clicked
+
+hit.point → world-space 3D coordinate
+
+hit.uv → texture coordinate (0 to 1)
+
+This is used in:
+
+3D painting
+
+texture drawing
+
+decals
+
+mesh editing
+
+shaders interacting with mouse
+
+🎨 Change color on click
+hit.object.material.color.set(0x00ff00);
+
+
+Makes the clicked cube green.
+
+⏳ Reset color later, but only if not hovered
+if (hit.object !== currentlyHovered) {
+    hit.object.material.color.set(hit.object.userData.originalColor);
+}
+
+
+Prevents hover color (red) from turning back to white.
+
+🧩 PART 6 — HOVER LOGIC (THE MOST IMPORTANT PART)
+🔄 Called 60 times per second
+raycaster.setFromCamera(mouse, camera);
+
+
+We update the ray every frame for hover detection.
+
+const intersects = raycaster.intersectObjects(objectsToTest);
+
+
+Shoot ray continuously while mouse moves.
+
+🟥 If mouse is over an object
+const newlyHovered = intersects[0].object;
+
+🚨 HOVER ENTER EVENT (object changed)
+if (currentlyHovered !== newlyHovered) {
+
+
+Meaning:
+
+mouse entered a new object
+
+OR mouse moved from empty space → object
+
+Actions:
+
+Reset old hover
+
+Highlight new hover
+
+Update state
+
+🚨 HOVER EXIT EVENT
+else if (currentlyHovered) {
+
+
+Meaning:
+
+No intersections now
+
+But last frame there was
+
+So mouse moved away from the object.
+
+Action:
+
+currentlyHovered.material.color.set(originalColor);
+currentlyHovered = null;
+
+🧠 SUMMARY OF RAYCASTER FLOW
+📌 1. Mouse moves
+
+→ Convert to -1 to +1 NDC
+→ Update ray every frame
+
+📌 2. Shoot the ray
+raycaster.setFromCamera(mouse, camera);
+
+📌 3. Check for hits
+intersectObjects()
+
+📌 4. Determine
+
+hover enter
+
+hover exit
+
+click
+
+UV coordinate
+
+exact triangle
+
+exact world-space hit point
+
+📌 5. Change object color based on state
+
+hover → red
+
+click → green
+
+reset → original

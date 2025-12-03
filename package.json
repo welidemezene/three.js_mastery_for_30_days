@@ -9,11 +9,14 @@
     "dev-day5": "vite src/day_5/",
     "dev-day6": "vite src/day_6/",
     "dev-day7": "vite src/day_7/",
-    
+    "dev-day8": "vite src/day_8/",
+    "dev-day9": "vite src/day_9/",
+    "dev-day10": "vite src/day_10/",
     "dev": "vite",
     "build": "vite build"
   },
   "dependencies": {
+    "lil-gui": "^0.21.0",
     "three": "^0.160.0"
   },
   "devDependencies": {
