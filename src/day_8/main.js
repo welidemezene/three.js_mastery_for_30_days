@@ -1,5 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+// ============================================================================
+// LIL-GUI IMPORT & CONCEPT
+// ============================================================================
+// lil-gui is a lightweight GUI library for creating debug panels in web apps.
+// It automatically creates UI controls (sliders, color pickers, buttons) based
+// on JavaScript object properties. When you change values in the GUI, it updates
+// the object properties, and vice versa.
 import GUI from 'lil-gui';
 
 // ============================================================================
@@ -41,7 +48,21 @@ controls.maxDistance = 50;
 // ============================================================================
 // 2. DEBUG OBJECTS & STATE MANAGEMENT
 // ============================================================================
-
+// 
+// CONCEPT: The Debug Object Pattern
+// ===================================
+// This is a central object that stores ALL parameters you want to control
+// through the GUI. Instead of directly controlling Three.js objects, you:
+// 1. Store values in this debugObject
+// 2. Use lil-gui to create controls that modify debugObject properties
+// 3. Use onChange callbacks to sync debugObject values to actual scene objects
+//
+// WHY THIS PATTERN?
+// - Single source of truth for all debug values
+// - Easy to save/load configurations
+// - Can reset all values easily
+// - Keeps GUI code separate from scene logic
+//
 // Main debug object containing all tweakable parameters
 const debugObject = {
     // Scene
@@ -88,6 +109,14 @@ const debugObject = {
     pulseAnimation: true,
     rotationAnimation: true,
     
+    // ========================================================================
+    // METHODS IN DEBUG OBJECT
+    // ========================================================================
+    // CONCEPT: Function Controllers
+    // When you add a function to debugObject and then add it to GUI using
+    // gui.add(debugObject, 'functionName'), lil-gui creates a BUTTON that,
+    // when clicked, calls that function. This is how you create action buttons.
+    //
     // Methods
     randomizeScene: function() {
         this.ballColor = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
@@ -354,7 +383,64 @@ scene.add(golfBallBBoxHelper);
 // ============================================================================
 // 6. GUI CONFIGURATION - COMPLETE CONTROLS
 // ============================================================================
-
+//
+// ========================================================================
+// LIL-GUI COMPREHENSIVE GUIDE
+// ========================================================================
+//
+// 1. CREATING CONTROLS
+//    -----------------
+//    - add(object, 'property') → Creates control based on property type:
+//      * boolean → Checkbox
+//      * number → Slider (can add min, max, step: add(obj, 'prop', 0, 100, 1))
+//      * string → Text input
+//      * function → Button
+//    - addColor(object, 'property') → Color picker (for hex strings like '#ff0000')
+//
+// 2. CHAINING METHODS
+//    ----------------
+//    - .name('Label') → Custom display name
+//    - .onChange(callback) → Called when value changes (callback receives new value)
+//    - .listen() → Makes GUI watch property and auto-update display
+//
+// 3. TWO PATTERNS FOR UPDATING SCENE
+//    --------------------------------
+//    PATTERN A: Through debugObject (with onChange)
+//      debugObject.value → GUI → onChange → sceneObject.property
+//      Example: debugObject.ballColor → onChange → golfBall.material.color.set()
+//
+//    PATTERN B: Direct binding (no onChange needed)
+//      sceneObject.property → GUI (two-way binding)
+//      Example: golfBall.position.x → GUI (directly bound)
+//
+// 4. DISPLAY-ONLY VALUES (Read-Only Info)
+//    -------------------------------------
+//    - Create object with string/number properties
+//    - Update properties in code (e.g., in animation loop)
+//    - Use .listen() so GUI reflects changes automatically
+//    - IMPORTANT: Arrays don't work! Use strings: '1, 2, 3' not [1, 2, 3]
+//
+// 5. ORGANIZATION
+//    ------------
+//    - gui.addFolder('Name') → Creates collapsible group
+//    - folder.close() → Starts folder collapsed
+//    - Can nest folders: subFolder = mainFolder.addFolder('Sub')
+//
+// 6. FUNCTION CONTROLLERS (Buttons)
+//    --------------------------------
+//    - Add function to any object
+//    - GUI creates button that calls function when clicked
+//    - No onChange needed - function IS the action
+//
+// ========================================================================
+//
+// CONCEPT: Creating a GUI Instance
+// =================================
+// new GUI(options) creates a new debug panel. The options object can include:
+// - title: Text shown at the top of the panel
+// - width: Width in pixels
+// - close: Whether to show a close button
+//
 // Initialize GUI
 const gui = new GUI({
     title: '🎯 Expert Debug Panel',
@@ -362,6 +448,12 @@ const gui = new GUI({
     close: true
 });
 
+// CONCEPT: Styling the GUI
+// ========================
+// gui.domElement is the actual HTML element of the GUI panel. You can style
+// it like any DOM element using standard CSS properties. This is useful for
+// positioning the panel on your page.
+//
 // Apply custom styles
 gui.domElement.style.position = 'absolute';
 gui.domElement.style.top = '100px';
@@ -371,22 +463,68 @@ gui.domElement.style.zIndex = '1000';
 // ----------------------------------------------------------------------------
 // A. SCENE FOLDER
 // ----------------------------------------------------------------------------
+// CONCEPT: Creating Folders
+// ==========================
+// gui.addFolder(name) creates a collapsible folder/group in the GUI.
+// Folders help organize controls into logical sections. You can nest folders
+// by calling addFolder() on another folder.
+//
+// Example: const subFolder = mainFolder.addFolder('Sub Settings');
+//
 const sceneFolder = gui.addFolder('🌍 Scene Settings');
-sceneFolder.addColor(debugObject, 'backgroundColor')
-    .name('Background Color')
-    .onChange(color => scene.background.set(color));
 
-sceneFolder.add(debugObject, 'showGrid')
+// CONCEPT: addColor() - Color Picker Controller
+// =============================================
+// folder.addColor(object, propertyName) creates a COLOR PICKER control.
+// It automatically detects if the property is a color (hex string like '#ff0000')
+// and creates a color picker UI.
+//
+// SYNTAX: folder.addColor(object, 'propertyName')
+// - object: The object containing the property
+// - propertyName: The name of the property (as a string)
+//
+// CHAINING METHODS:
+// .name('Display Name') - Changes the label shown in GUI
+// .onChange(callback) - Runs a function whenever the value changes
+//
+sceneFolder.addColor(debugObject, 'backgroundColor')
+    .name('Background Color')  // Custom label (instead of 'backgroundColor')
+    .onChange(color => scene.background.set(color));  // Sync to scene when changed
+
+// CONCEPT: add() - Universal Controller
+// ======================================
+// folder.add(object, propertyName) creates a control based on the property TYPE:
+// - boolean → creates a CHECKBOX
+// - number → creates a SLIDER (needs min, max, step)
+// - string → creates a TEXT INPUT
+// - function → creates a BUTTON
+//
+// For numbers, you can specify range: add(object, 'prop', min, max, step)
+//
+sceneFolder.add(debugObject, 'showGrid')  // boolean → checkbox
     .name('Show Grid')
-    .onChange(value => gridHelper.visible = value);
+    .onChange(value => gridHelper.visible = value);  // Update scene object
 
 sceneFolder.add(debugObject, 'showAxes')
     .name('Show Axes')
     .onChange(value => axesHelper.visible = value);
 
+// CONCEPT: onChange() Callback Pattern
+// =====================================
+// .onChange(callback) is called EVERY TIME the user changes the value in GUI.
+// The callback receives the NEW value as its first parameter.
+//
+// WHY USE onChange?
+// - GUI controls modify debugObject properties
+// - But your actual scene objects (lights, meshes) need to be updated too
+// - onChange bridges the gap: when debugObject changes, update the scene
+//
+// PATTERN: debugObject → GUI → onChange → Scene Object
+//
 sceneFolder.add(debugObject, 'showHelpers')
     .name('Show All Helpers')
-    .onChange(value => {
+    .onChange(value => {  // value = new boolean value from checkbox
+        // Update multiple scene objects when one GUI control changes
         directionalLightHelper.visible = value;
         pointLightHelper.visible = value;
         cameraHelper.visible = value;
@@ -396,15 +534,34 @@ sceneFolder.add(debugObject, 'showHelpers')
 // ----------------------------------------------------------------------------
 // B. GOLF BALL FOLDER (Material & Transform)
 // ----------------------------------------------------------------------------
+// CONCEPT: Nested Folders
+// =======================
+// You can create folders inside folders for better organization.
+// ballFolder → ballMaterialFolder (nested)
+// ballFolder → ballTransformFolder (nested)
+//
 const ballFolder = gui.addFolder('🏌️ Golf Ball');
-const ballMaterialFolder = ballFolder.addFolder('Material');
-const ballTransformFolder = ballFolder.addFolder('Transform');
+const ballMaterialFolder = ballFolder.addFolder('Material');  // Nested folder
+const ballTransformFolder = ballFolder.addFolder('Transform');  // Nested folder
 
 // Material Controls
+
+// Color picker for material color
 ballMaterialFolder.addColor(debugObject, 'ballColor')
     .name('Color')
     .onChange(color => golfBall.material.color.set(color));
 
+// CONCEPT: Number Slider with Range
+// ==================================
+// For NUMBER properties, you can specify:
+// add(object, 'property', min, max, step)
+// - min: Minimum value (left end of slider)
+// - max: Maximum value (right end of slider)
+// - step: How much the value changes per slider movement (precision)
+//
+// Example: add(debugObject, 'ballRoughness', 0, 1, 0.01)
+// Creates a slider from 0 to 1, with 0.01 increments
+//
 ballMaterialFolder.add(debugObject, 'ballRoughness', 0, 1, 0.01)
     .name('Roughness')
     .onChange(value => golfBall.material.roughness = value);
@@ -421,9 +578,30 @@ ballMaterialFolder.add(debugObject, 'ballOpacity', 0.1, 1, 0.01)
     .name('Opacity')
     .onChange(value => golfBall.material.opacity = value);
 
+// CONCEPT: Function Controller (Button)
+// ======================================
+// When you add a FUNCTION property, lil-gui creates a BUTTON.
+// Clicking the button calls the function.
+// No onChange needed - the function itself is the action.
+//
 ballMaterialFolder.add(debugObject, 'updateMaterial').name('🔄 Update Material');
 
 // Transform Controls
+
+// CONCEPT: Direct Property Binding (No onChange Needed)
+// ======================================================
+// You can bind GUI controls DIRECTLY to Three.js object properties!
+// Instead of: debugObject.positionX → onChange → golfBall.position.x
+// You can do: golfBall.position.x directly
+//
+// ADVANTAGES:
+// - Simpler code (no onChange needed)
+// - GUI automatically reflects changes made in code
+// - Two-way binding: GUI ↔ Object property
+//
+// NOTE: These controllers are stored in variables (posXController, etc.)
+// so you can reference them later if needed (e.g., for .listen() method)
+//
 const posXController = ballTransformFolder.add(golfBall.position, 'x', -5, 5, 0.1)
     .name('X Position');
 
@@ -478,11 +656,17 @@ pointFolder.add(pointLight.position, 'z', -10, 10, 0.1).name('Z Position');
 // D. CAMERA FOLDER
 // ----------------------------------------------------------------------------
 const cameraFolder = gui.addFolder('📷 Camera');
+// CONCEPT: onChange with Multiple Operations
+// ===========================================
+// Sometimes changing one property requires updating multiple things.
+// In this case, changing FOV requires updating the camera AND calling
+// updateProjectionMatrix() to apply the change.
+//
 cameraFolder.add(debugObject, 'cameraFov', 30, 120, 1)
     .name('Field of View')
     .onChange(value => {
         camera.fov = value;
-        camera.updateProjectionMatrix();
+        camera.updateProjectionMatrix();  // Required after changing FOV
     });
 
 cameraFolder.add(debugObject, 'cameraNear', 0.1, 10, 0.1)
@@ -512,6 +696,12 @@ cameraFolder.add(debugObject, 'rotationSpeed', 0.1, 2, 0.1)
 // ----------------------------------------------------------------------------
 const ghostFolder = gui.addFolder('👻 Ghost Object');
 
+// CONCEPT: Separate Action Object Pattern
+// ========================================
+// Sometimes you want action buttons that don't fit in debugObject.
+// Create a separate object with functions, then add them to GUI.
+// This keeps your code organized and separates actions from properties.
+//
 // Create debug object for ghost actions
 const ghostActions = {
     summonGhost: function() {
@@ -542,20 +732,30 @@ const ghostActions = {
     }
 };
 
+// CONCEPT: Adding Functions from Any Object
+// ==========================================
+// You can add functions from ANY object, not just debugObject.
+// When you add a function, lil-gui creates a button that calls it when clicked.
+//
 ghostFolder.add(ghostActions, 'summonGhost').name('✨ Summon Ghost');
 ghostFolder.add(ghostActions, 'banishGhost').name('💀 Banish Ghost');
 ghostFolder.add(ghostActions, 'toggleGhostVisibility').name('👁️ Toggle Visible');
 
+// CONCEPT: onChange with Safety Checks
+// =====================================
+// Sometimes the object you're trying to update might not exist yet.
+// Always check if the object exists before trying to modify it in onChange.
+//
 ghostFolder.addColor(debugObject, 'ghostColor')
     .name('Color')
     .onChange(color => {
-        if (ghost) ghost.material.color.set(color);
+        if (ghost) ghost.material.color.set(color);  // Safety check
     });
 
 ghostFolder.add(debugObject, 'ghostOpacity', 0.1, 1, 0.01)
     .name('Opacity')
     .onChange(value => {
-        if (ghost) ghost.material.opacity = value;
+        if (ghost) ghost.material.opacity = value;  // Safety check
     });
 
 // ----------------------------------------------------------------------------
@@ -606,33 +806,80 @@ utilsFolder.add(debugObject, 'resetScene').name('🔄 Reset Scene');
 // ----------------------------------------------------------------------------
 const infoFolder = gui.addFolder('📊 Debug Info');
 
+// CONCEPT: Display-Only Information (Read-Only Values)
+// =====================================================
+// Sometimes you want to SHOW information in the GUI but not let users edit it.
+// This is useful for displaying stats, counts, positions, etc.
+//
+// STRATEGY:
+// 1. Create an object with string/number properties
+// 2. Update those properties in your code (e.g., in animation loop)
+// 3. Use .listen() to make GUI automatically reflect changes
+//
+// IMPORTANT: lil-gui CANNOT display arrays directly!
+// If you try: objectInfo.position = [1, 2, 3] → GUI will fail
+// SOLUTION: Convert to string: objectInfo.position = '1, 2, 3'
+//
 // Object info - using string representations instead of arrays
 const objectInfo = {
-    totalObjects: '0',
-    golfBallPosition: '0, 0, 0',
+    totalObjects: '0',           // String, not number (for display)
+    golfBallPosition: '0, 0, 0',  // String, not array (arrays don't work!)
     ghostStatus: 'Not in Scene',
     memory: 'N/A'
 };
 
+// CONCEPT: updateObjectInfo() - Reactive Update Pattern
+// ======================================================
+// This function updates the objectInfo properties based on current scene state.
+// Call this function regularly (e.g., in animation loop) to keep GUI in sync.
+//
+// WHY THIS PATTERN?
+// - Scene objects change (positions, counts, etc.)
+// - GUI needs to show current values
+// - We update objectInfo, then .listen() makes GUI reflect the changes
+//
 function updateObjectInfo() {
+    // Update total object count
     objectInfo.totalObjects = scene.children.length.toString();
     
-    // Format position as string instead of array
+    // Format position as string instead of array (arrays don't work with GUI!)
     const pos = golfBall.position;
     objectInfo.golfBallPosition = `${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}, ${pos.z.toFixed(2)}`;
     
+    // Update ghost status
     objectInfo.ghostStatus = ghostAdded ? 'In Scene' : 'Not in Scene';
+    
+    // Update memory usage (if available)
     objectInfo.memory = performance.memory ? 
         `${(performance.memory.usedJSHeapSize / 1048576).toFixed(1)} MB` : 
         'N/A';
 }
 
-// Create info controllers
+// CONCEPT: .listen() - Reactive Updates
+// =====================================
+// .listen() tells the GUI controller to WATCH the property and automatically
+// update the display when the property value changes in code.
+//
+// HOW IT WORKS:
+// 1. You update objectInfo.totalObjects in your code
+// 2. GUI controller with .listen() detects the change
+// 3. GUI display updates automatically (no manual refresh needed)
+//
+// WITHOUT .listen(): GUI only shows initial value, never updates
+// WITH .listen(): GUI stays in sync with property changes
+//
+// Create info controllers with .listen() for automatic updates
 infoFolder.add(objectInfo, 'totalObjects').name('Total Objects').listen();
 infoFolder.add(objectInfo, 'golfBallPosition').name('Ball Position').listen();
 infoFolder.add(objectInfo, 'ghostStatus').name('Ghost Status').listen();
 infoFolder.add(objectInfo, 'memory').name('Memory Usage').listen();
 
+// CONCEPT: Closing Folders
+// ========================
+// .close() collapses a folder so it starts closed/collapsed.
+// This keeps the GUI tidy and lets users expand only what they need.
+// Without .close(), all folders start expanded (can be overwhelming).
+//
 // Close all folders by default
 sceneFolder.close();
 ballMaterialFolder.close();
@@ -809,6 +1056,12 @@ function animate() {
     // Update stats and checklist
     updateStats();
     updateChecklist();
+    
+    // CONCEPT: Keeping GUI in Sync
+    // ============================
+    // Call updateObjectInfo() every frame to update display-only values.
+    // This updates objectInfo properties, and controllers with .listen()
+    // automatically reflect the changes in the GUI.
     updateObjectInfo();
     
     // Render
