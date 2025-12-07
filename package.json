@@ -12,6 +12,12 @@
     "dev-day8": "vite src/day_8/",
     "dev-day9": "vite src/day_9/",
     "dev-day10": "vite src/day_10/",
+    "dev-day11": "vite src/day_11/",
+    "dev-day12": "vite src/day_12/",
+    "dev-day13": "vite src/day_13/",
+    "dev-day14": "vite src/day_14/",
+    "dev-day15": "vite src/day_15/",
+
     "dev-day88": "vite src/day_88/",
     "dev": "vite",
     "build": "vite build"
